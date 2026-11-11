@@ -7,9 +7,6 @@ on:
 jobs:
   frontend-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
     steps:
       - name: 拉取代码
         uses: actions/checkout@v4
@@ -23,14 +20,13 @@ jobs:
         run: npm install
 
       - name: 前端测试
-        # 如果你们暂时没有前端单元测试，可以先改成 echo 占位，避免一直红
-        run: echo "前端测试通过"
+        run: echo "前端测试占位"
 
   backend-test:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./backend
+        working-directory: ./后端
     steps:
       - name: 拉取代码
         uses: actions/checkout@v4
@@ -48,4 +44,3 @@ jobs:
 
       - name: 后端 pytest 测试
         run: echo "后端测试占位"
-
