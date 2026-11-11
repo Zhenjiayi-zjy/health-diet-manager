@@ -71,4 +71,32 @@ const handleRegister = () => {
 </script>
 
 <style scoped>
+.register-page {
+  width: 400px;
+  margin: 80px auto;
+  padding: 30px 24px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+}
+
+.register-page h2 {
+  text-align: center;
+  margin: 0 0 24px 0;
+  color: #303133;
+  font-weight: 500;
+}
+
+.register-page .el-form-item:last-child {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.register-page span {
+  margin-left: 12px;
+  font-size: 14px;
+  color: #606266;
+}
 </style>
+
