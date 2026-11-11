@@ -132,4 +132,63 @@ const handleDelete = (id) => {
 </script>
 
 <style scoped>
+.diet-record-page {
+  padding: 20px;
+  padding-bottom: 70px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.date-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.date-tip {
+  font-size: 14px;
+  color: #666;
+}
+
+.record-form-card {
+  padding: 20px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 24px;
+}
+
+.record-form-card h3,
+.record-list h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #303133;
+}
+
+.record-item {
+  margin-bottom: 12px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.food-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.item-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: #606266;
+}
 </style>
+
