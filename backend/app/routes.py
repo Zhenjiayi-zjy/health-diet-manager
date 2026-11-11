@@ -62,3 +62,44 @@ def add_diet():
 def diet_list(user_id):
     records = DietRecord.query.filter_by(user_id=user_id).order_by(DietRecord.eaten_at.desc()).all()
     return APIResponse.success(data=[r.to_dict() for r in records])
+
+# 搜索食物
+@main_bp.route('/api/food/search', methods=['GET'])
+def search_food():
+    keyword = request.args.get('keyword', '')
+    foods = Food.query.filter(Food.name.like(f'%{keyword}%')).all()
+    return APIResponse.success(data=[f.to_dict() for f in foods])
+
+# 每日热量统计
+@main_bp.route('/api/diet/daily-summary', methods=['GET'])
+def daily_summary(user_id):
+    from datetime import datetime
+    today = datetime.now().date()
+    records = DietRecord.query.filter(
+        DietRecord.user_id == user_id,
+        db.func.date(DietRecord.eaten_at) == today
+    ).all()
+
+    total_calories = 0
+    total_protein = 0
+    total_fat = 0
+    total_carbs = 0
+
+    for r in records:
+        food = r.food
+        if food:
+            # 按比例计算：实际重量 / 100 * 每100g含量
+            ratio = r.amount / 100
+            total_calories += food.calories * ratio
+            total_protein += food.protein * ratio
+            total_fat += food.fat * ratio
+            total_carbs += food.carbs * ratio
+
+    return APIResponse.success(data={
+        "date": str(today),
+        "total_calories": round(total_calories, 1),
+        "total_protein": round(total_protein, 1),
+        "total_fat": round(total_fat, 1),
+        "total_carbs": round(total_carbs, 1),
+        "record_count": len(records)
+    })
