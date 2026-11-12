@@ -38,15 +38,28 @@ def generate_token(user_id):
 def login_required(f):
     """登录验证装饰器"""
     from functools import wraps
+    from jwt import ExpiredSignatureError, InvalidTokenError
+    
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get("Authorization")
         if not token:
             return APIResponse.error("未登录，请先登录", 401)
+        
+        # 处理 Bearer 前缀（前端传的是 "Bearer xxx"）
+        if token.startswith("Bearer "):
+            token = token.replace("Bearer ", "")
+        
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user_id = data["user_id"]
+        except ExpiredSignatureError:
+            return APIResponse.error("登录已过期，请重新登录", 401)
+        except InvalidTokenError:
+            return APIResponse.error("token无效，请重新登录", 401)
         except:
-            return APIResponse.error("token失效，请重新登录", 401)
+            return APIResponse.error("登录状态异常，请重新登录", 401)
+        
         return f(user_id, *args, **kwargs)
     return decorated
+
