@@ -1,6 +1,24 @@
 <template>
   <div class="login-page">
     <h1>登录页</h1>
+    <el-form
+      ref="loginFormRef"
+      :model="loginForm"
+      :rules="loginRules"
+      label-width="80px"
+      class="login-form"
+    >
+      <el-form-item label="账号" prop="username">
+        <el-input v-model="loginForm.username" placeholder="请输入账号"></el-input>
+      </el-form-item>
+      <el-form-item label="密码" prop="password">
+        <el-input v-model="loginForm.password" type="password" placeholder="请输入密码"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="handleLogin">登录</el-button>
+        <el-button @click="goRegister">去注册</el-button>
+      </el-form-item>
+    </el-form>
   </div>
 </template>
 
@@ -43,14 +61,25 @@ const handleLogin = async () => {
       router.push('/')
     }
   } catch (err) {
-    console.error('登录失败:', err)
+    console.error('登录失败', err)
+    ElMessage.error('登录失败，请检查账号密码')
   }
+}
+
+// 跳转注册页
+const goRegister = () => {
+  router.push('/register')
 }
 </script>
 
 <style scoped>
-.home-page {
+.login-page {
+  width: 400px;
+  margin: 120px auto 0;
   padding: 20px;
-  padding-bottom: 60px;
+}
+
+.login-form {
+  margin-top: 30px;
 }
 </style>
