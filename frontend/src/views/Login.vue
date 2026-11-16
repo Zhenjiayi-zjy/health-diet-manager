@@ -1,13 +1,7 @@
 <template>
   <div class="login-page">
-    <h1>登录页</h1>
-    <el-form
-      ref="loginFormRef"
-      :model="loginForm"
-      :rules="loginRules"
-      label-width="80px"
-      class="login-form"
-    >
+    <h2>用户登录</h2>
+    <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="80px">
       <el-form-item label="账号" prop="username">
         <el-input v-model="loginForm.username" placeholder="请输入账号"></el-input>
       </el-form-item>
@@ -16,7 +10,7 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleLogin">登录</el-button>
-        <el-button @click="goRegister">去注册</el-button>
+        <span>没有账号？<router-link to="/register">去注册</router-link></span>
       </el-form-item>
     </el-form>
   </div>
@@ -27,7 +21,6 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
-
 const router = useRouter()
 const loginFormRef = ref(null)
 
@@ -53,7 +46,7 @@ const handleLogin = async () => {
   try {
     const valid = await loginFormRef.value.validate()
     if (valid) {
-      const res = await request.post('/api/login', loginForm.value)
+      const res = await request.post('/login', loginForm.value)
       // 存储Token与用户信息
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('userInfo', JSON.stringify(res.data.user))
@@ -83,3 +76,4 @@ const goRegister = () => {
   margin-top: 30px;
 }
 </style>
+

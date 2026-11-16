@@ -24,16 +24,13 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
-
 const router = useRouter()
 const registerFormRef = ref(null)
-
 const registerForm = ref({
   username: '',
   password: '',
   confirmPassword: ''
 })
-
 // 两次密码一致性校验
 const validateConfirmPassword = (rule, value, callback) => {
   if (value !== registerForm.value.password) {
@@ -42,7 +39,6 @@ const validateConfirmPassword = (rule, value, callback) => {
     callback()
   }
 }
-
 const registerRules = {
   username: [
     { required: true, message: '请输入账号', trigger: 'blur' }

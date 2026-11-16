@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 // 导入5个页面（新增Register导入）
+dev
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
@@ -21,3 +22,4 @@ const router = createRouter({
 })
 
 export default router
+

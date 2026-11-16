@@ -1,11 +1,13 @@
 from flask import Blueprint, request
 from app import db
 from app.models import User, Food, DietRecord
-from app.utils import APIResponse, APIException
+from app.utils import APIResponse, APIException, generate_token, login_required
+from datetime import datetime, timedelta
+
 
 main_bp = Blueprint('main', __name__)
 
-# 健康检查接口
+# 健康检查
 @main_bp.route('/api/health', methods=['GET'])
 def health():
     return APIResponse.success(message="后端服务正常运行中")
@@ -41,14 +43,26 @@ def login():
     if not user or not user.check_password(password):
         raise APIException("用户名或密码错误")
 
-    return APIResponse.success(data=user.to_dict(), message="登录成功")
+    token = generate_token(user.id)
+    return APIResponse.success(
+        data={"token": token, "user": user.to_dict()},
+        message="登录成功"
+    )
+
+# 获取当前用户信息
+@main_bp.route('/api/user/info', methods=['GET'])
+def user_info(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        raise APIException("用户不存在", 404)
+    return APIResponse.success(data=user.to_dict())
 
 # 添加饮食记录
 @main_bp.route('/api/diet/add', methods=['POST'])
-def add_diet():
+def add_diet(user_id):
     data = request.get_json()
     record = DietRecord(
-        user_id=data.get('user_id'),
+        user_id=user_id,
         food_id=data.get('food_id'),
         amount=data.get('amount'),
         meal_type=data.get('meal_type', '午餐')
@@ -58,7 +72,57 @@ def add_diet():
     return APIResponse.success(data=record.to_dict(), message="记录添加成功")
 
 # 获取某用户的饮食记录列表
-@main_bp.route('/api/diet/list/<int:user_id>', methods=['GET'])
+@main_bp.route('/api/diet/list', methods=['GET'])
 def diet_list(user_id):
     records = DietRecord.query.filter_by(user_id=user_id).order_by(DietRecord.eaten_at.desc()).all()
     return APIResponse.success(data=[r.to_dict() for r in records])
+
+# 搜索食物
+# 搜索食物
+@main_bp.route('/api/food/search', methods=['GET'])
+def search_food():
+    keyword = request.args.get('keyword', '').strip()
+    if not keyword:
+        return APIResponse.success(data=[])
+    foods = Food.query.filter(Food.name.like(f'%{keyword}%')).all()
+    return APIResponse.success(data=[f.to_dict() for f in foods])
+
+
+# 每日热量统计
+@main_bp.route('/api/diet/daily-summary', methods=['GET'])
+@login_required
+def daily_summary(user_id):
+    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_start = today_start + timedelta(days=1)
+    
+    records = DietRecord.query.filter(
+        DietRecord.user_id == user_id,
+        DietRecord.eaten_at >= today_start,
+        DietRecord.eaten_at < tomorrow_start
+    ).all()
+
+    total_calories = 0
+    total_protein = 0
+    total_fat = 0
+    total_carbs = 0
+    valid_count = 0
+
+    for r in records:
+        food = r.food
+        if food:
+            ratio = r.amount / 100
+            total_calories += food.calories * ratio
+            total_protein += food.protein * ratio
+            total_fat += food.fat * ratio
+            total_carbs += food.carbs * ratio
+            valid_count += 1
+
+    return APIResponse.success(data={
+        "date": today_start.strftime("%Y-%m-%d"),
+        "total_calories": round(total_calories, 1),
+        "total_protein": round(total_protein, 1),
+        "total_fat": round(total_fat, 1),
+        "total_carbs": round(total_carbs, 1),
+        "record_count": valid_count
+    })
+
