@@ -2,7 +2,6 @@ from flask import jsonify, request
 import jwt
 from datetime import datetime, timedelta
 
-# 密钥，实际项目放配置里，课程项目先写死
 SECRET_KEY = "diet-health-secret-key-2026"
 
 class APIException(Exception):
@@ -28,15 +27,13 @@ class APIResponse:
         })
 
 def generate_token(user_id):
-    """生成token"""
     payload = {
         "user_id": user_id,
-        "exp": datetime.utcnow() + timedelta(days=7)  # 7天有效期
+        "exp": datetime.utcnow() + timedelta(days=7)
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
 def login_required(f):
-    """登录验证装饰器"""
     from functools import wraps
     from jwt import ExpiredSignatureError, InvalidTokenError
     
@@ -46,7 +43,6 @@ def login_required(f):
         if not token:
             return APIResponse.error("未登录，请先登录", 401)
         
-        # 处理 Bearer 前缀（前端传的是 "Bearer xxx"）
         if token.startswith("Bearer "):
             token = token.replace("Bearer ", "")
         
@@ -62,4 +58,3 @@ def login_required(f):
         
         return f(user_id, *args, **kwargs)
     return decorated
-
