@@ -23,18 +23,15 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-
+import request from '@/utils/request'
 const router = useRouter()
 const registerFormRef = ref(null)
-
-// 表单数据
 const registerForm = ref({
   username: '',
   password: '',
   confirmPassword: ''
 })
-
-// 自定义校验：两次密码一致性校验
+// 两次密码一致性校验
 const validateConfirmPassword = (rule, value, callback) => {
   if (value !== registerForm.value.password) {
     callback(new Error('两次输入的密码不一致'))
@@ -42,8 +39,6 @@ const validateConfirmPassword = (rule, value, callback) => {
     callback()
   }
 }
-
-// 表单校验规则
 const registerRules = {
   username: [
     { required: true, message: '请输入账号', trigger: 'blur' }
@@ -59,14 +54,20 @@ const registerRules = {
 }
 
 // 注册处理
-const handleRegister = () => {
-  registerFormRef.value.validate((valid) => {
+const handleRegister = async () => {
+  try {
+    const valid = await registerFormRef.value.validate()
     if (valid) {
-      // 模拟注册成功，后续对接后端接口替换此处逻辑
+      await request.post('/register', {
+        username: registerForm.value.username,
+        password: registerForm.value.password
+      })
       ElMessage.success('注册成功，请登录')
       router.push('/login')
     }
-  })
+  } catch (err) {
+    console.error('注册失败:', err)
+  }
 }
 </script>
 
@@ -99,4 +100,3 @@ const handleRegister = () => {
   color: #606266;
 }
 </style>
-

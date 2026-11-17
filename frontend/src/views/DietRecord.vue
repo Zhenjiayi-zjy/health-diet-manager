@@ -56,66 +56,80 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/utils/request'
 
 const formRef = ref(null)
 const currentDate = ref(new Date().toISOString().slice(0, 10))
 
-// 食物热量映射表（模拟数据，后续对接后端接口替换）
-const foodCalorieMap = {
-  rice: { name: '米饭', calorie: 116 },
-  egg: { name: '鸡蛋', calorie: 143 },
-  milk: { name: '牛奶', calorie: 54 },
-  apple: { name: '苹果', calorie: 52 },
-  noodle: { name: '面条', calorie: 109 }
-}
-
+// 表单数据
 const form = ref({
   foodId: '',
   weight: ''
 })
 
-// 全量记录数据（模拟数据库）
-const allRecords = ref([])
 
-// 根据日期筛选的当日记录
-const recordList = computed(() => {
-  return allRecords.value.filter(item => item.date === currentDate.value)
-})
+// 记录列表
+const recordList = ref([])
+
+// 食物选项列表
+const foodOptions = ref([])
 
 // 表单校验规则
-const rules = ref({
+const rules = {
   foodId: [{ required: true, message: '请选择食物', trigger: 'change' }],
   weight: [
     { required: true, message: '请输入分量', trigger: 'blur' },
     { type: 'number', message: '请输入数字', trigger: 'blur' }
   ]
-})
+}
 
+// 获取食物列表（搜索/初始化）
+const getFoodList = async (keyword = '') => {
+  try {
+    const res = await request.get('/food/search', {
+      params: { keyword }
+    })
+    foodOptions.value = res.data.map(item => ({
+      label: item.name,
+      value: item.id
+    }))
+  } catch (err) {
+    console.error('获取食物列表失败:', err)
+  }
+}
+
+// 获取当日饮食记录
+const getRecordList = async () => {
+  try {
+    const res = await request.get('/diet/list', {
+      params: { date: currentDate.value }
+    })
+    recordList.value = res.data
+  } catch (err) {
+    console.error('获取记录失败:', err)
+  }
+}
 
 // 添加记录
-const handleAdd = () => {
-  formRef.value.validate((valid) => {
+const handleAdd = async () => {
+  try {
+    const valid = await formRef.value.validate()
     if (valid) {
-      const foodInfo = foodCalorieMap[form.value.foodId]
-      const totalCalorie = Math.round((foodInfo.calorie * form.value.weight) / 100)
-      
-      const newRecord = {
-        id: Date.now(),
-        date: currentDate.value,
+      await request.post('/diet/add', {
         foodId: form.value.foodId,
-        foodName: foodInfo.name,
-        weight: form.value.weight,
-        calorie: totalCalorie,
-        time: new Date().toLocaleTimeString()
-      }
-      
-      allRecords.value.unshift(newRecord)
+        amount: form.value.weight,
+        date: currentDate.value
+      })
       ElMessage.success('记录添加成功')
       formRef.value.resetFields()
+      // 重新拉取列表
+      getRecordList()
     }
-  })
+  } catch (err) {
+    console.error('添加记录失败:', err)
+  }
 }
 
 // 删除记录
@@ -124,11 +138,28 @@ const handleDelete = (id) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    allRecords.value = allRecords.value.filter(item => item.id !== id)
-    ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      await request.delete(`/diet/${id}`)
+      ElMessage.success('删除成功')
+      getRecordList()
+    } catch (err) {
+      console.error('删除失败:', err)
+    }
   }).catch(() => {})
 }
+
+// 切换日期重新加载数据
+const handleDateChange = () => {
+  getRecordList()
+}
+
+// 页面初始化加载数据
+onMounted(() => {
+  getFoodList()
+  getRecordList()
+})
+
 </script>
 
 <style scoped>

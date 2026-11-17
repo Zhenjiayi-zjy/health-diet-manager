@@ -20,7 +20,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-
+import request from '@/utils/request'
 const router = useRouter()
 const loginFormRef = ref(null)
 
@@ -42,44 +42,38 @@ const loginRules = {
 }
 
 // 登录处理
-const handleLogin = () => {
-  loginFormRef.value.validate((valid) => {
+const handleLogin = async () => {
+  try {
+    const valid = await loginFormRef.value.validate()
     if (valid) {
-      // 模拟登录成功，后续对接后端接口替换此处逻辑
+      const res = await request.post('/login', loginForm.value)
+      // 存储Token与用户信息
+      localStorage.setItem('token', res.data.token)
+      localStorage.setItem('userInfo', JSON.stringify(res.data.user))
       ElMessage.success('登录成功')
       router.push('/')
     }
-  })
+  } catch (err) {
+    console.error('登录失败', err)
+    ElMessage.error('登录失败，请检查账号密码')
+  }
+}
+
+// 跳转注册页
+const goRegister = () => {
+  router.push('/register')
 }
 </script>
 
 <style scoped>
 .login-page {
   width: 400px;
-  margin: 80px auto;
-  padding: 30px 24px;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+  margin: 120px auto 0;
+  padding: 20px;
 }
 
-.login-page h2 {
-  text-align: center;
-  margin: 0 0 24px 0;
-  color: #303133;
-  font-weight: 500;
-}
-
-.login-page .el-form-item:last-child {
-  margin-bottom: 0;
-  text-align: center;
-}
-
-.login-page span {
-  margin-left: 12px;
-  font-size: 14px;
-  color: #606266;
+.login-form {
+  margin-top: 30px;
 }
 </style>
 
