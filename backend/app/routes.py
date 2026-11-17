@@ -126,3 +126,68 @@ def daily_summary(user_id):
         "record_count": valid_count
     })
 
+# ==================== 扩展功能接口 ====================
+
+# 删除饮食记录
+@main_bp.route('/api/diet/<int:record_id>', methods=['DELETE'])
+@login_required
+def delete_diet(user_id, record_id):
+    record = DietRecord.query.filter_by(id=record_id, user_id=user_id).first()
+    if not record:
+        raise APIException('记录不存在', 404)
+    db.session.delete(record)
+    db.session.commit()
+    return APIResponse.success(message='删除成功')
+
+
+# 近7天统计
+@main_bp.route('/api/diet/weekly-summary', methods=['GET'])
+@login_required
+def weekly_summary(user_id):
+    from datetime import timedelta
+    today = datetime.now().date()
+    start_date = today - timedelta(days=6)
+    
+    records = DietRecord.query.filter(
+        DietRecord.user_id == user_id,
+        DietRecord.eaten_at >= start_date,
+        DietRecord.eaten_at < today + timedelta(days=1)
+    ).all()
+    
+    # 按天分组
+    daily_data = {}
+    for i in range(7):
+        day = start_date + timedelta(days=i)
+        daily_data[str(day)] = 0
+    
+    for r in records:
+        food = r.food
+        if food:
+            day_str = r.eaten_at.strftime('%Y-%m-%d')
+            daily_data[day_str] = daily_data.get(day_str, 0) + food.calories * (r.amount / 100)
+    
+    result = [{"date": k, "calories": round(v, 1)} for k, v in sorted(daily_data.items())]
+    return APIResponse.success(data=result)
+
+
+# 设置每日目标
+@main_bp.route('/api/user/goal', methods=['PUT'])
+@login_required
+def update_goal(user_id):
+    data = request.get_json()
+    goal = data.get('daily_goal')
+    if not goal or goal <= 0:
+        raise APIException('请输入有效的热量目标', 400)
+    
+    user = User.query.get(user_id)
+    user.daily_goal = goal
+    db.session.commit()
+    return APIResponse.success(message='目标设置成功')
+
+
+# 获取每日目标
+@main_bp.route('/api/user/goal', methods=['GET'])
+@login_required
+def get_goal(user_id):
+    user = User.query.get(user_id)
+    return APIResponse.success(data={"daily_goal": user.daily_goal})

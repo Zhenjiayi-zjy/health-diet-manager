@@ -9,6 +9,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     email = db.Column(db.String(120), unique=True)
+    daily_goal = db.Column(db.Float, default=2000)  # 每日热量目标，默认2000千卡
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     diet_records = db.relationship('DietRecord', backref='user', lazy=True)
