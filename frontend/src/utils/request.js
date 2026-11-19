@@ -4,9 +4,10 @@ import router from '@/router'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://10.129.235.250:5000/api', // 完整地址，不走代理
   timeout: 10000
 })
+
 
 // 请求拦截器：自动携带Token
 service.interceptors.request.use(
